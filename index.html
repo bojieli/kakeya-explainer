@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="A visual guide to the Kakeya set problem and the three-dimensional breakthrough highlighted in Hong Wang's 2026 Fields Medal citation."
+    />
+    <title>The Kakeya Set Problem — A 2026 Fields Medal Breakthrough, Made Visible</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23f4f0e8' stroke='%23087f73' stroke-width='3'/%3E%3Cpath d='M13 21l38 22M13 43l38-22' stroke='%23e7674f' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to the explanation</a>
+
+    <header class="site-header" aria-label="Page header">
+      <a class="brand" href="#top" aria-label="Kakeya, made visible — home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Kakeya, made visible</span>
+      </a>
+      <nav class="chapter-nav" aria-label="Chapters">
+        <a href="#pack">Pack the tubes</a>
+        <a href="#count">Count the cubes</a>
+        <a href="#theorem">The result</a>
+      </nav>
+      <button class="motion-toggle" id="motionToggle" type="button" aria-pressed="false">Pause motion</button>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span>2026 Fields Medal</span> · an interactive guide for non-specialists</p>
+          <h1 id="hero-title"><em>The Kakeya set problem:</em> every direction, almost no volume.</h1>
+
+          <aside class="hero-news" aria-label="Why the Kakeya problem is in the news">
+            <p class="card-kicker">Why this problem matters now</p>
+            <p>
+              In July 2026, <strong>Hong Wang and Yu Deng became China’s first Fields Medal recipients</strong>.
+              Wang’s official citation highlighted her major advances on the
+              <strong>Kakeya problem in three dimensions</strong>. Her work with
+              <strong>Joshua Zahl</strong> resolved the three-dimensional conjecture explained here.
+            </p>
+            <div class="hero-news-links">
+              <a href="https://www.mathunion.org/imu-awards/fields-medal/fields-medals-2026">Official medal citation <span aria-hidden="true">↗</span></a>
+              <a href="https://www.bbc.com/news/articles/cvg84gp8xx4o">BBC on China’s first recipients <span aria-hidden="true">↗</span></a>
+              <a href="https://www.quantamagazine.org/hong-wang-wins-2026-fields-medal-the-third-woman-ever-20260723/">Quanta profile <span aria-hidden="true">↗</span></a>
+            </div>
+          </aside>
+
+          <p class="hero-lede">
+            At a finite scale, an ideal line segment looks like a thin tube. The puzzle is whether
+            tubes pointing throughout space can overlap so efficiently that their volume becomes
+            tiny—and whether that can make the underlying set less than three-dimensional.
+          </p>
+
+          <div class="hero-actions">
+            <a class="button button-primary" href="#pack">Pack the thick needles</a>
+            <a class="text-link" href="#theorem">Jump to the theorem <span aria-hidden="true">↓</span></a>
+          </div>
+
+          <div class="hero-facts" aria-label="Key facts">
+            <div><strong>1</strong><span>unit segment in every direction</span></div>
+            <div><strong>δ</strong><span>tube thickness at the current scale</span></div>
+            <div><strong>3</strong><span>dimensions ultimately forced</span></div>
+          </div>
+        </div>
+
+      </section>
+
+      <section class="section pack-section" id="pack" aria-labelledby="pack-title">
+        <div class="section-heading heading-split">
+          <div>
+            <p class="step-label">01 · Pack the thick needles</p>
+            <h2 id="pack-title">Keep every tilt. Change only where each tube sits.</h2>
+          </div>
+          <p>
+            The paper studies <strong>δ-tubes</strong>: the δ-scale neighborhoods of unit line
+            segments. Moving a tube does not change its direction. Good placement lets different
+            tubes reuse some of the same space.
+          </p>
+        </div>
+
+        <div class="tube-lab">
+          <div class="tube-stage glass-panel">
+            <canvas
+              id="packCanvas"
+              role="img"
+              aria-label="A rotatable three-dimensional animation of thick line segments moving from separated positions into a compact overlapping arrangement without rotating"
+            ></canvas>
+            <div class="visual-topline">
+              <span class="live-dot" aria-hidden="true"></span>
+              <span id="packStageLabel">Separated positions</span>
+              <span class="visual-hint">drag to rotate</span>
+            </div>
+            <div class="axis-key" aria-hidden="true"><span class="axis-x">x</span><span class="axis-y">y</span><span class="axis-z">z</span></div>
+            <div class="stage-caption" id="packCaption" aria-live="polite">
+              The tubes have many tilts, but little shared space.
+            </div>
+          </div>
+
+          <div class="tube-controls">
+            <div class="control-card">
+              <div class="control-title-row">
+                <label for="packSlider">Separated → packed</label>
+                <output id="packOutput" for="packSlider">separated</output>
+              </div>
+              <input id="packSlider" type="range" min="0" max="100" value="0" step="0.1" />
+              <button class="button button-secondary button-wide" id="playPacking" type="button">Pack the tubes together</button>
+            </div>
+
+            <div class="tube-rule-card">
+              <p class="card-kicker">What is allowed to change?</p>
+              <div class="rule-row"><span>Each tube’s tilt</span><strong>fixed</strong></div>
+              <div class="rule-row"><span>Each tube’s length</span><strong>fixed at 1</strong></div>
+              <div class="rule-row"><span>Each tube’s location</span><strong>free to move</strong></div>
+            </div>
+
+            <div class="sample-readout">
+              <div><span>tubes drawn</span><strong id="packTubeCount">100</strong><small>a finite sample</small></div>
+              <div><span>tube scale</span><strong>δ</strong><small>visible thickness</small></div>
+              <div><span>rotations made</span><strong>0</strong><small>directions survive</small></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="union-explanation">
+          <article>
+            <div class="union-icon sum-icon" aria-hidden="true"><i></i><i></i><i></i></div>
+            <p class="card-kicker">Not this</p>
+            <h3>Do not add every tube separately</h3>
+            <p>That would count the same shared region again for every tube passing through it.</p>
+          </article>
+          <span class="union-arrow" aria-hidden="true">→</span>
+          <article class="union-result">
+            <div class="union-icon overlap-icon" aria-hidden="true"><i></i><i></i><i></i></div>
+            <p class="card-kicker">Measure this</p>
+            <h3>Take the volume of the union</h3>
+            <p>A region occupied by ten overlapping tubes is counted only once.</p>
+          </article>
+        </div>
+
+        <aside class="plain-note">
+          <span class="note-number">A</span>
+          <p>
+            <strong>This animation is a finite-scale model, not the Wang–Zahl construction.</strong>
+            It displays finitely many representative directions so that overlap can be seen. The
+            mathematical Kakeya condition asks for an ideal segment in every direction.
+          </p>
+        </aside>
+      </section>
+
+      <section class="section count-section" id="count" aria-labelledby="count-title">
+        <div class="section-heading heading-split">
+          <div>
+            <p class="step-label">02 · Count the cubes</p>
+            <h2 id="count-title">Freeze that same packing. Put a three-dimensional mosaic over it.</h2>
+          </div>
+          <p>
+            A cube lights up exactly when it meets one of the displayed thick needles. Counting those
+            cubes is the spatial version of covering a picture with tiny squares.
+          </p>
+        </div>
+
+        <div class="continuity-strip" aria-label="How the first animation becomes the second">
+          <div><span class="continuity-number">1</span><strong>Same packed tubes</strong><small>No new geometric object</small></div>
+          <i aria-hidden="true">→</i>
+          <div><span class="continuity-number">2</span><strong>Add a δ-cube grid</strong><small>One ruler for all three axes</small></div>
+          <i aria-hidden="true">→</i>
+          <div><span class="continuity-number">3</span><strong>Count every touched cube</strong><small>Overlaps are counted once</small></div>
+        </div>
+
+        <div class="count-lab">
+          <div class="count-stage glass-panel">
+            <canvas
+              id="countCanvas"
+              role="img"
+              aria-label="The packed tube arrangement from part one covered by translucent cubes; every drawn cube intersects at least one tube"
+            ></canvas>
+            <div class="visual-topline">
+              <span class="live-dot" aria-hidden="true"></span>
+              <span>Same packing · δ-scale microscope</span>
+              <span class="visual-hint">drag to rotate</span>
+            </div>
+            <div class="count-legend" aria-hidden="true">
+              <span><i class="tube-key"></i>thick needles</span>
+              <span><i class="cube-key"></i>cubes they touch</span>
+            </div>
+            <div class="stage-caption" id="countCaption" aria-live="polite">
+              Tubes and the cubes that touch them are shown together.
+            </div>
+          </div>
+
+          <div class="count-controls">
+            <div class="control-card">
+              <p class="card-kicker">Choose the ruler</p>
+              <div class="resolution-buttons" id="resolutionButtons" role="group" aria-label="Cube ruler size">
+                <button type="button" data-level="0"><strong>1/2</strong></button>
+                <button type="button" data-level="1"><strong>1/4</strong></button>
+                <button type="button" data-level="2"><strong>1/6</strong></button>
+                <button type="button" data-level="3"><strong>1/8</strong></button>
+                <button type="button" data-level="4" class="active"><strong>1/10</strong></button>
+                <button type="button" data-level="5"><strong>1/12</strong></button>
+                <button type="button" data-level="6"><strong>1/14</strong></button>
+                <button type="button" data-level="7"><strong>1/16</strong></button>
+                <button type="button" data-level="8"><strong>1/18</strong></button>
+                <button type="button" data-level="9"><strong>1/20</strong></button>
+              </div>
+              <div class="ruler-direction-visual">
+                <div class="mini-ruler-wrap">
+                  <span>one unit, divided into <b id="rulerDivisionCount">10</b></span>
+                  <div class="mini-ruler" id="miniRuler" aria-hidden="true"></div>
+                </div>
+                <div class="direction-density-wrap">
+                  <div class="direction-dot-field" id="directionDotField" aria-hidden="true"></div>
+                  <p><strong id="directionEquation">10 × 10 = 100</strong><span>distinguishable direction samples</span></p>
+                </div>
+              </div>
+            </div>
+
+            <div class="control-card">
+              <p class="card-kicker">What should remain visible?</p>
+              <div class="view-buttons" id="viewButtons" role="group" aria-label="Tube and cube visibility">
+                <button type="button" data-view="tubes">tubes</button>
+                <button type="button" data-view="both" class="active">both</button>
+                <button type="button" data-view="cubes">cubes</button>
+              </div>
+            </div>
+
+            <div class="count-rule-card">
+              <p class="card-kicker">The counting rule</p>
+              <div class="touch-rule-visual" aria-hidden="true"><span class="touch-tube"></span><span class="touch-cube"></span><b>✓</b></div>
+              <p><strong>Touch once → count once.</strong> A cube still counts only once when several tubes pass through it.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="live-count-panel" aria-live="polite">
+          <div class="live-count-heading">
+            <p class="card-kicker">This displayed finite-scale snapshot</p>
+            <h3 id="snapshotSentence">Counting the cubes touched by the medium tube sample…</h3>
+          </div>
+          <div class="live-count-grid">
+            <div><span>cube side</span><strong id="cubeSide">1/10</strong></div>
+            <div><span>direction samples</span><strong id="directionCount">100</strong><small>on the order of δ<sup>−2</sup></small></div>
+            <div class="occupied-stat"><span>cubes in this cover</span><strong id="occupiedCount">—</strong></div>
+            <div><span>all cubes in frame</span><strong id="availableCount">—</strong></div>
+            <div><span>occupied fraction</span><strong id="occupiedFraction">—</strong></div>
+            <div><span>volume proxy</span><strong id="volumeProxy">—</strong><small>N(δ) × δ<sup>3</sup></small></div>
+          </div>
+          <p class="boundary-note">
+            The screen uses a fixed enclosing box and an intersection test for the displayed tubes.
+            Moving the grid changes boundary cubes slightly, but only by fixed factors that do not change a dimension exponent.
+          </p>
+        </div>
+
+        <div class="measurement-bridge">
+          <article class="fraction-card">
+            <div>
+              <p class="card-kicker">Occupied fraction · one ruler size</p>
+              <h3>How much of the enclosing frame is colored?</h3>
+              <p>
+                This 100-tile gauge copies the percentage from the three-dimensional counter above.
+                Each tile represents one percent of the available cube positions—not a flat slice of the tubes.
+              </p>
+            </div>
+            <div class="fraction-gauge-wrap">
+              <div class="fraction-mosaic" id="fractionMosaic" aria-hidden="true"></div>
+              <div class="fraction-equation">
+                <span id="fractionTouched">904 touched</span><b>÷</b><span id="fractionAvailable">3,375 available</span><b>=</b><strong id="fractionPercent">26.79%</strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="volume-dimension-card">
+            <p class="card-kicker">Two measurements, two different questions</p>
+            <div class="measurement-lane volume-lane">
+              <div class="measurement-icon snapshot-icon" aria-hidden="true"><i></i></div>
+              <div>
+                <span>Volume is the occupied amount in each sharper snapshot</span>
+                <strong id="volumeEquation">N(δ) × δ³ ≈ 0.9</strong>
+                <p>At each scale, count the cubes and multiply by one cube’s volume. Ordinary volume is what this occupied amount approaches as δ tends to zero.</p>
+              </div>
+            </div>
+            <div class="measurement-lane dimension-lane">
+              <div class="scale-film" aria-hidden="true"><i><b>1/2</b></i><span>→</span><i><b>1/10</b></i><span>→</span><i><b>1/20</b></i></div>
+              <div>
+                <span>Dimension is the growth pattern across the whole film</span>
+                <strong>d tracks the exponent in N(δ)</strong>
+                <p>A small occupied fraction at one scale does not decide the dimension. What matters is how fast the required cube count grows over arbitrarily finer rulers.</p>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <section class="dimension-story" aria-labelledby="dimension-title">
+          <div class="dimension-heading">
+            <div>
+              <p class="step-label">Volume can fall while the exponent stays 3</p>
+              <h2 id="dimension-title">A concrete rate model makes the distinction visible.</h2>
+            </div>
+            <p>
+              The following count sequence is an arithmetic model, not a claimed Kakeya construction.
+              It isolates the exact phenomenon that ordinary volume and dimension measure differently.
+            </p>
+          </div>
+
+          <div class="rate-model">
+            <div class="rate-table-wrap">
+              <table>
+                <thead><tr><th>ruler</th><th>all cubes</th><th>fraction used</th><th>occupied cubes N</th></tr></thead>
+                <tbody>
+                  <tr><td>1/10</td><td>1,000</td><td>1</td><td>1,000</td></tr>
+                  <tr><td>1/100</td><td>1,000,000</td><td>1/2</td><td>500,000</td></tr>
+                  <tr><td>1/1,000</td><td>1,000,000,000</td><td>≈ 1/3</td><td>333,333,333</td></tr>
+                  <tr><td>1/10,000</td><td>1,000,000,000,000</td><td>1/4</td><td>250,000,000,000</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="rate-formula-card">
+              <p class="card-kicker">The explicit rule</p>
+              <p class="formula-large">At ruler 10<sup>−n</sup>, use about <strong>1/n</strong> of the 10<sup>3n</sup> cubes.</p>
+              <div class="formula-stack">
+                <div><span>occupied fraction</span><strong>1/n → 0</strong><small>so the volume proxy tends to zero</small></div>
+                <div><span>whole-cube count</span><strong>N<sub>n</sub> = ⌊10<sup>3n</sup>/n⌋</strong><small>round down to the nearest whole cube</small></div>
+                <div><span>effective exponent</span><strong>d<sub>n</sub> ≈ 3 − log<sub>10</sub>(n)/n → 3</strong><small>integer rounding does not change the limiting power</small></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="multiplier-lab">
+            <div class="multiplier-control">
+              <div class="control-title-row">
+                <label for="decadeSlider">Number of tenfold refinements</label>
+                <output id="decadeOutput" for="decadeSlider">n = 10</output>
+              </div>
+              <input id="decadeSlider" type="range" min="1" max="1000" value="10" />
+              <div class="slider-endpoints"><span>1</span><span>1,000</span></div>
+            </div>
+            <div class="multiplier-readouts" aria-live="polite">
+              <div><span>fraction still occupied</span><strong id="modelFraction">1/10 = 10%</strong></div>
+              <div><span>next count multiplier</span><strong id="modelMultiplier">×909</strong></div>
+              <div class="exponent-readout"><span>effective dimension</span><strong id="modelDimension">2.900</strong></div>
+            </div>
+            <p id="modelExplanation">
+              After 10 refinements, the fraction is already shrinking, while the count exponent is moving toward 3.
+            </p>
+          </div>
+        </section>
+
+        <section class="theorem-card" id="theorem" aria-labelledby="theorem-title">
+          <div class="theorem-kicker"><span>Wang–Zahl · three dimensions</span><b>Resolved</b></div>
+          <div class="theorem-layout">
+            <div>
+              <p class="step-label">What the theorem says</p>
+              <h2 id="theorem-title">Every Kakeya set in ℝ<sup>3</sup> has dimension 3.</h2>
+            </div>
+            <div class="theorem-copy">
+              <p>
+                Clever overlap may make the occupied fraction—and even ordinary volume—zero. But it
+                cannot produce a lasting power-law saving in the number of tiny cubes required.
+              </p>
+              <p>
+                In plain language: <strong>the set can be extremely sparse, but it cannot behave like a
+                surface, a curve, or anything with fewer than three dimensions.</strong>
+              </p>
+            </div>
+          </div>
+          <div class="theorem-results">
+            <div><span>Minkowski dimension</span><strong>3</strong><small>count equal-sized cubes</small></div>
+            <div><span>Hausdorff dimension</span><strong>3</strong><small>allow flexible tiny coverings</small></div>
+            <div><span>ordinary volume</span><strong>may be 0</strong><small>full dimension does not forbid this</small></div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer>
+      <div>
+        <p><strong>Kakeya, made visible</strong> · an interactive conceptual guide</p>
+        <p>
+          Mathematical note: the animations sample finitely many directions. At scale δ, the paper’s
+          finite-resolution language uses δ-tubes in δ-separated directions; the theorem concerns the limiting set.
+        </p>
+      </div>
+      <a href="#top">Back to top ↑</a>
+    </footer>
+
+    <noscript>
+      <div class="noscript-message">This explanation uses JavaScript for its interactive diagrams. Please enable JavaScript to view the animations.</div>
+    </noscript>
+    <script src="app.js"></script>
+  </body>
+</html>
