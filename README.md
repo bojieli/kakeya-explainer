@@ -2,6 +2,8 @@
 
 A standalone interactive webpage explaining Kakeya sets through the finite-scale δ-tubes used in the three-dimensional theory. One continuous visual story packs thick unit segments, covers that same packing with cubes, and explains why zero volume can coexist with full three-dimensional scaling.
 
+**Live site:** https://bojieli.github.io/kakeya-explainer/
+
 ## Open it
 
 Double-click `index.html`, or serve the folder locally:
