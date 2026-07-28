@@ -312,9 +312,12 @@
   const fractionPercent = document.querySelector("#fractionPercent");
   const volumeEquation = document.querySelector("#volumeEquation");
   const snapshotIcon = document.querySelector(".snapshot-icon");
+  const scaleCurveSvg = document.querySelector("#scaleCurveSvg");
+  const scaleCurveData = document.querySelector("#scaleCurveData");
   let selectedLevel = 4;
   let selectedView = "both";
   const voxelCache = new Map();
+  const pendingCovers = new Map();
 
   const fractionTiles = Array.from({ length: 100 }, () => {
     const tile = document.createElement("i");
@@ -428,6 +431,125 @@
     return { level: level, cells: cells, surface: surface, tubes: tubes };
   }
 
+  function ensureVoxelCover(levelIndex) {
+    if (voxelCache.has(levelIndex)) return Promise.resolve(voxelCache.get(levelIndex));
+    if (pendingCovers.has(levelIndex)) return pendingCovers.get(levelIndex);
+    const pending = new Promise((resolve) => {
+      window.setTimeout(() => {
+        const cover = computeVoxelCover(levelIndex);
+        voxelCache.set(levelIndex, cover);
+        pendingCovers.delete(levelIndex);
+        resolve(cover);
+      }, 20);
+    });
+    pendingCovers.set(levelIndex, pending);
+    return pending;
+  }
+
+  function appendSvg(parent, tag, attributes, textContent) {
+    const element = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    Object.entries(attributes || {}).forEach(([name, value]) => element.setAttribute(name, String(value)));
+    if (textContent !== undefined) element.textContent = textContent;
+    parent.append(element);
+    return element;
+  }
+
+  function renderScaleCurves() {
+    const covers = cubeLevels.map((_, index) => voxelCache.get(index));
+    const completed = covers.filter(Boolean).length;
+    scaleCurveData.replaceChildren();
+    covers.forEach((cover, index) => {
+      const level = cubeLevels[index];
+      const card = document.createElement("div");
+      card.classList.toggle("active", index === selectedLevel);
+      const ruler = document.createElement("span");
+      ruler.textContent = "δ = " + level.label;
+      const count = document.createElement("strong");
+      const fraction = document.createElement("small");
+      if (cover) {
+        count.textContent = formatInteger.format(cover.cells.size) + " cubes";
+        fraction.textContent = formatDecimal.format(cover.cells.size / (level.grid ** 3) * 100) + "% occupied";
+      } else {
+        count.textContent = "counting…";
+        fraction.textContent = level.directions + " directions";
+      }
+      card.append(ruler, count, fraction);
+      scaleCurveData.append(card);
+    });
+
+    scaleCurveSvg.replaceChildren();
+    if (completed < cubeLevels.length) {
+      appendSvg(scaleCurveSvg, "rect", { x: 24, y: 24, width: 952, height: 382, rx: 18, class: "plot-background" });
+      appendSvg(scaleCurveSvg, "text", { x: 500, y: 195, "text-anchor": "middle", class: "plot-title" }, "Building the complete ruler curve…");
+      appendSvg(scaleCurveSvg, "text", { x: 500, y: 224, "text-anchor": "middle", class: "axis-label" }, completed + " of " + cubeLevels.length + " geometric counts ready");
+      const progressWidth = 520 * completed / cubeLevels.length;
+      appendSvg(scaleCurveSvg, "rect", { x: 240, y: 250, width: 520, height: 9, rx: 5, fill: "rgba(23,35,29,0.10)" });
+      appendSvg(scaleCurveSvg, "rect", { x: 240, y: 250, width: progressWidth, height: 9, rx: 5, fill: COLORS.teal });
+      return;
+    }
+
+    const left = 92;
+    const right = 952;
+    const plotWidth = right - left;
+    const topStart = 72;
+    const topEnd = 184;
+    const bottomStart = 270;
+    const bottomEnd = 368;
+    const counts = covers.map((cover) => cover.cells.size);
+    const fractions = covers.map((cover, index) => cover.cells.size / (cubeLevels[index].grid ** 3) * 100);
+    const maxCount = Math.ceil(Math.max(...counts) / 1000) * 1000;
+    const xFor = (index) => left + plotWidth * index / (cubeLevels.length - 1);
+    const countY = (value) => topEnd - value / maxCount * (topEnd - topStart);
+    const fractionY = (value) => bottomEnd - value / 100 * (bottomEnd - bottomStart);
+
+    appendSvg(scaleCurveSvg, "rect", { x: 58, y: 25, width: 918, height: 180, rx: 16, class: "plot-background" });
+    appendSvg(scaleCurveSvg, "rect", { x: 58, y: 220, width: 918, height: 175, rx: 16, class: "plot-background" });
+    appendSvg(scaleCurveSvg, "text", { x: 76, y: 47, class: "plot-title" }, "Occupied cube count N(δ)");
+    appendSvg(scaleCurveSvg, "text", { x: 76, y: 241, class: "plot-title" }, "Occupied fraction of the enclosing frame");
+
+    [0, 0.5, 1].forEach((ratio) => {
+      const y = topEnd - ratio * (topEnd - topStart);
+      appendSvg(scaleCurveSvg, "line", { x1: left, y1: y, x2: right, y2: y, class: "grid-line" });
+      appendSvg(scaleCurveSvg, "text", { x: left - 13, y: y + 4, "text-anchor": "end", class: "axis-label" }, formatInteger.format(maxCount * ratio));
+    });
+    [0, 50, 100].forEach((value) => {
+      const y = fractionY(value);
+      appendSvg(scaleCurveSvg, "line", { x1: left, y1: y, x2: right, y2: y, class: "grid-line" });
+      appendSvg(scaleCurveSvg, "text", { x: left - 13, y: y + 4, "text-anchor": "end", class: "axis-label" }, value + "%");
+    });
+
+    const selectedX = xFor(selectedLevel);
+    appendSvg(scaleCurveSvg, "line", { x1: selectedX, y1: topStart - 5, x2: selectedX, y2: bottomEnd + 5, class: "selected-guide" });
+    const countPath = counts.map((value, index) => (index === 0 ? "M " : "L ") + xFor(index) + " " + countY(value)).join(" ");
+    const fractionPath = fractions.map((value, index) => (index === 0 ? "M " : "L ") + xFor(index) + " " + fractionY(value)).join(" ");
+    appendSvg(scaleCurveSvg, "path", { d: countPath, class: "count-path" });
+    appendSvg(scaleCurveSvg, "path", { d: fractionPath, class: "fraction-path" });
+
+    counts.forEach((value, index) => {
+      const x = xFor(index);
+      const y = countY(value);
+      appendSvg(scaleCurveSvg, "circle", { cx: x, cy: y, r: 4.5, class: "count-point" });
+      appendSvg(scaleCurveSvg, "text", { x: x, y: y - 10, "text-anchor": "middle", class: "point-label" }, formatInteger.format(value));
+      if (index === selectedLevel) appendSvg(scaleCurveSvg, "circle", { cx: x, cy: y, r: 9, class: "selected-halo" });
+    });
+    fractions.forEach((value, index) => {
+      const x = xFor(index);
+      const y = fractionY(value);
+      appendSvg(scaleCurveSvg, "circle", { cx: x, cy: y, r: 4.5, class: "fraction-point" });
+      appendSvg(scaleCurveSvg, "text", { x: x, y: y - 10, "text-anchor": "middle", class: "point-label" }, value.toFixed(1) + "%");
+      appendSvg(scaleCurveSvg, "text", { x: x, y: 388, "text-anchor": "middle", class: "axis-label" }, cubeLevels[index].denominator);
+      if (index === selectedLevel) appendSvg(scaleCurveSvg, "circle", { cx: x, cy: y, r: 9, class: "selected-halo" });
+    });
+    appendSvg(scaleCurveSvg, "text", { x: 522, y: 417, "text-anchor": "middle", class: "axis-label" }, "ruler denominator m  (δ = 1/m)");
+  }
+
+  async function buildCompleteScaleCurve() {
+    for (let index = 0; index < cubeLevels.length; index += 1) {
+      await ensureVoxelCover(index);
+      renderScaleCurves();
+    }
+  }
+
   function drawProjectedCube(ctx, cell, cover, width, height, alpha) {
     const level = cover.level;
     const min = -0.75;
@@ -530,13 +652,12 @@
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", String(active));
     });
-    if (!voxelCache.has(levelIndex)) {
-      updateCountReadout();
-      window.setTimeout(() => {
-        voxelCache.set(levelIndex, computeVoxelCover(levelIndex));
-        updateCountReadout();
-      }, 20);
-    } else updateCountReadout();
+    updateCountReadout();
+    renderScaleCurves();
+    ensureVoxelCover(levelIndex).then(() => {
+      if (selectedLevel === levelIndex) updateCountReadout();
+      renderScaleCurves();
+    });
   }
 
   resolutionButtons.addEventListener("click", (event) => {
@@ -648,5 +769,6 @@
   updateViewButtonStates();
   updateRateModel();
   updateMotionButton();
+  window.setTimeout(buildCompleteScaleCurve, 700);
   window.requestAnimationFrame(render);
 })();

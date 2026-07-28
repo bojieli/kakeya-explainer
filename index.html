@@ -135,16 +135,16 @@
         <div class="union-explanation">
           <article>
             <div class="union-icon sum-icon" aria-hidden="true"><i></i><i></i><i></i></div>
-            <p class="card-kicker">Not this</p>
-            <h3>Do not add every tube separately</h3>
-            <p>That would count the same shared region again for every tube passing through it.</p>
+            <p class="card-kicker">Separate-volume total</p>
+            <h3>Adding individual tube volumes overcounts overlap</h3>
+            <p>If several tubes share a region, adding their full volumes counts that same region several times.</p>
           </article>
           <span class="union-arrow" aria-hidden="true">→</span>
           <article class="union-result">
             <div class="union-icon overlap-icon" aria-hidden="true"><i></i><i></i><i></i></div>
-            <p class="card-kicker">Measure this</p>
-            <h3>Take the volume of the union</h3>
-            <p>A region occupied by ten overlapping tubes is counted only once.</p>
+            <p class="card-kicker">Union volume</p>
+            <h3>Measure shared space only once</h3>
+            <p>The union counts a region once, whether one tube or ten tubes pass through it.</p>
           </article>
         </div>
 
@@ -242,6 +242,38 @@
             </div>
           </div>
         </div>
+
+        <figure class="scale-curve-panel" aria-labelledby="scale-curve-title">
+          <figcaption>
+            <div>
+              <p class="card-kicker">All ten rulers at once</p>
+              <h3 id="scale-curve-title">The cube count rises while the occupied fraction falls.</h3>
+            </div>
+            <p>
+              These curves collect the same finite tube snapshots shown above. The horizontal axis is
+              the denominator <span class="math-inline">m</span> in the ruler <span class="math-inline">δ = 1/m</span>.
+            </p>
+          </figcaption>
+          <div class="curve-legend" aria-hidden="true">
+            <span><i class="count-curve-key"></i>occupied cube count</span>
+            <span><i class="fraction-curve-key"></i>occupied fraction</span>
+          </div>
+          <div class="curve-scroll">
+            <svg
+              id="scaleCurveSvg"
+              viewBox="0 0 1000 430"
+              role="img"
+              aria-label="Curves showing occupied cube count increasing and occupied fraction decreasing for rulers one half through one twentieth"
+            >
+              <text x="500" y="210" text-anchor="middle">Computing all ten geometric counts…</text>
+            </svg>
+          </div>
+          <div class="curve-data-strip" id="scaleCurveData" aria-live="polite"></div>
+          <p class="curve-caveat">
+            This is the behavior of the displayed finite model, not a graph of the Wang–Zahl proof.
+            Dimension concerns the limiting exponent over arbitrarily fine rulers.
+          </p>
+        </figure>
 
         <div class="live-count-panel" aria-live="polite">
           <div class="live-count-heading">
