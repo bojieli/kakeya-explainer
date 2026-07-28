@@ -24,6 +24,7 @@
   const ease = (t) => t * t * (3 - 2 * t);
   const formatInteger = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
   const formatDecimal = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
+  const formatThreeDecimals = new Intl.NumberFormat("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
   const hsla = (h, s, l, a) => "hsla(" + h + "," + s + "%," + l + "%," + a + ")";
   const rgba = (r, g, b, a) => "rgba(" + r + "," + g + "," + b + "," + a + ")";
 
@@ -118,6 +119,34 @@
       grid: Math.round(1.5 * denominator),
     };
   });
+  // Exact counts made by scripts/precompute_counts.cpp. The browser uses these
+  // for every number and curve; it builds 3D surface cubes only on demand.
+  const interactiveCurveCounts = [
+    { denominator: 2, count: 25, available: 27 },
+    { denominator: 4, count: 107, available: 216 },
+    { denominator: 6, count: 277, available: 729 },
+    { denominator: 8, count: 505, available: 1728 },
+    { denominator: 10, count: 904, available: 3375 },
+    { denominator: 12, count: 1396, available: 5832 },
+    { denominator: 14, count: 2102, available: 9261 },
+    { denominator: 16, count: 2984, available: 13824 },
+    { denominator: 18, count: 4028, available: 19683 },
+    { denominator: 20, count: 5363, available: 27000 },
+  ];
+  const extendedCurveCounts = [
+    { denominator: 25, count: 9636, available: 54872 },
+    { denominator: 30, count: 15902, available: 91125 },
+    { denominator: 40, count: 35263, available: 216000 },
+    { denominator: 50, count: 65699, available: 421875 },
+    { denominator: 60, count: 110773, available: 729000 },
+    { denominator: 70, count: 173072, available: 1157625 },
+    { denominator: 80, count: 255753, available: 1728000 },
+    { denominator: 90, count: 360603, available: 2460375 },
+    { denominator: 100, count: 489216, available: 3375000 },
+    { denominator: 200, count: 3743554, available: 27000000 },
+    { denominator: 500, count: 57608938, available: 421875000 },
+    { denominator: 1000, count: 456958817, available: 3375000000 },
+  ];
 
   function vectorAdd(a, b) { return { x: a.x + b.x, y: a.y + b.y, z: a.z + b.z }; }
 
@@ -314,6 +343,8 @@
   const snapshotIcon = document.querySelector(".snapshot-icon");
   const scaleCurveSvg = document.querySelector("#scaleCurveSvg");
   const scaleCurveData = document.querySelector("#scaleCurveData");
+  const finiteExponentEquation = document.querySelector("#finiteExponentEquation");
+  const finiteExponentExplanation = document.querySelector("#finiteExponentExplanation");
   let selectedLevel = 4;
   let selectedView = "both";
   const voxelCache = new Map();
@@ -454,100 +485,136 @@
     return element;
   }
 
+  function finiteExponent(denominator, count, baselineCount) {
+    if (denominator === 2 || !baselineCount) return null;
+    return Math.log(count / baselineCount) / Math.log(denominator / 2);
+  }
+
+  function compactCount(value) {
+    if (value >= 1000000000) return (value / 1000000000).toFixed(value >= 10000000000 ? 0 : 1) + "b";
+    if (value >= 1000000) return (value / 1000000).toFixed(value >= 10000000 ? 0 : 1) + "m";
+    if (value >= 1000) return (value / 1000).toFixed(value >= 10000 ? 0 : 1) + "k";
+    return formatInteger.format(value);
+  }
+
+  function shouldLabelCurvePoint(record) {
+    return (record.interactive && record.levelIndex === selectedLevel)
+      || [25, 50, 100, 200, 500, 1000].includes(record.denominator);
+  }
+
   function renderScaleCurves() {
-    const covers = cubeLevels.map((_, index) => voxelCache.get(index));
-    const completed = covers.filter(Boolean).length;
+    const baselineCount = interactiveCurveCounts[0].count;
+    const records = interactiveCurveCounts.map((record, index) => ({
+      ...record,
+      interactive: true,
+      levelIndex: index,
+    })).concat(extendedCurveCounts.map((record) => ({ ...record, interactive: false })));
     scaleCurveData.replaceChildren();
-    covers.forEach((cover, index) => {
-      const level = cubeLevels[index];
+    records.forEach((record) => {
       const card = document.createElement("div");
-      card.classList.toggle("active", index === selectedLevel);
+      card.classList.toggle("active", record.interactive && record.levelIndex === selectedLevel);
       const ruler = document.createElement("span");
-      ruler.textContent = "δ = " + level.label;
+      ruler.textContent = "δ = 1/" + record.denominator;
       const count = document.createElement("strong");
       const fraction = document.createElement("small");
-      if (cover) {
-        count.textContent = formatInteger.format(cover.cells.size) + " cubes";
-        fraction.textContent = formatDecimal.format(cover.cells.size / (level.grid ** 3) * 100) + "% occupied";
-      } else {
-        count.textContent = "counting…";
-        fraction.textContent = level.directions + " directions";
-      }
-      card.append(ruler, count, fraction);
+      const exponent = document.createElement("small");
+      exponent.className = "card-exponent";
+      count.textContent = formatInteger.format(record.count) + " cubes";
+      fraction.textContent = formatDecimal.format(record.count / record.available * 100) + "% occupied";
+      const value = finiteExponent(record.denominator, record.count, baselineCount);
+      exponent.textContent = value === null ? "exponent baseline" : "finite d = " + value.toFixed(3);
+      card.append(ruler, count, fraction, exponent);
       scaleCurveData.append(card);
     });
 
     scaleCurveSvg.replaceChildren();
-    if (completed < cubeLevels.length) {
-      appendSvg(scaleCurveSvg, "rect", { x: 24, y: 24, width: 952, height: 382, rx: 18, class: "plot-background" });
-      appendSvg(scaleCurveSvg, "text", { x: 500, y: 195, "text-anchor": "middle", class: "plot-title" }, "Building the complete ruler curve…");
-      appendSvg(scaleCurveSvg, "text", { x: 500, y: 224, "text-anchor": "middle", class: "axis-label" }, completed + " of " + cubeLevels.length + " geometric counts ready");
-      const progressWidth = 520 * completed / cubeLevels.length;
-      appendSvg(scaleCurveSvg, "rect", { x: 240, y: 250, width: 520, height: 9, rx: 5, fill: "rgba(23,35,29,0.10)" });
-      appendSvg(scaleCurveSvg, "rect", { x: 240, y: 250, width: progressWidth, height: 9, rx: 5, fill: COLORS.teal });
-      return;
-    }
-
     const left = 92;
     const right = 952;
     const plotWidth = right - left;
-    const topStart = 72;
-    const topEnd = 184;
-    const bottomStart = 270;
-    const bottomEnd = 368;
-    const counts = covers.map((cover) => cover.cells.size);
-    const fractions = covers.map((cover, index) => cover.cells.size / (cubeLevels[index].grid ** 3) * 100);
-    const maxCount = Math.ceil(Math.max(...counts) / 1000) * 1000;
-    const xFor = (index) => left + plotWidth * index / (cubeLevels.length - 1);
-    const countY = (value) => topEnd - value / maxCount * (topEnd - topStart);
-    const fractionY = (value) => bottomEnd - value / 100 * (bottomEnd - bottomStart);
+    const countTop = 65;
+    const countBottom = 174;
+    const fractionTop = 245;
+    const fractionBottom = 350;
+    const exponentTop = 425;
+    const exponentBottom = 545;
+    const counts = records.map((record) => record.count);
+    const fractions = records.map((record) => record.count / record.available * 100);
+    const exponents = records.map((record) => finiteExponent(record.denominator, record.count, baselineCount));
+    const maxDenominator = records.at(-1).denominator;
+    const maxCount = 1000000000;
+    const xFor = (denominator) => left + plotWidth * Math.log(denominator / 2) / Math.log(maxDenominator / 2);
+    const countY = (value) => countBottom - Math.log(value / baselineCount) / Math.log(maxCount / baselineCount) * (countBottom - countTop);
+    const fractionY = (value) => fractionBottom - value / 100 * (fractionBottom - fractionTop);
+    const exponentY = (value) => exponentBottom - (value - 2) * (exponentBottom - exponentTop);
 
-    appendSvg(scaleCurveSvg, "rect", { x: 58, y: 25, width: 918, height: 180, rx: 16, class: "plot-background" });
-    appendSvg(scaleCurveSvg, "rect", { x: 58, y: 220, width: 918, height: 175, rx: 16, class: "plot-background" });
-    appendSvg(scaleCurveSvg, "text", { x: 76, y: 47, class: "plot-title" }, "Occupied cube count N(δ)");
-    appendSvg(scaleCurveSvg, "text", { x: 76, y: 241, class: "plot-title" }, "Occupied fraction of the enclosing frame");
+    appendSvg(scaleCurveSvg, "rect", { x: 58, y: 20, width: 918, height: 170, rx: 16, class: "plot-background" });
+    appendSvg(scaleCurveSvg, "rect", { x: 58, y: 205, width: 918, height: 165, rx: 16, class: "plot-background" });
+    appendSvg(scaleCurveSvg, "rect", { x: 58, y: 385, width: 918, height: 180, rx: 16, class: "plot-background" });
+    appendSvg(scaleCurveSvg, "text", { x: 76, y: 43, class: "plot-title" }, "Occupied cube count N(δ) · logarithmic axes");
+    appendSvg(scaleCurveSvg, "text", { x: 76, y: 228, class: "plot-title" }, "Occupied fraction of the enclosing frame");
+    appendSvg(scaleCurveSvg, "text", { x: 76, y: 408, class: "plot-title" }, "Finite exponent from 1/2 to this ruler");
 
-    [0, 0.5, 1].forEach((ratio) => {
-      const y = topEnd - ratio * (topEnd - topStart);
+    [25, 2500, 250000, 25000000, 1000000000].forEach((value) => {
+      const y = countY(value);
       appendSvg(scaleCurveSvg, "line", { x1: left, y1: y, x2: right, y2: y, class: "grid-line" });
-      appendSvg(scaleCurveSvg, "text", { x: left - 13, y: y + 4, "text-anchor": "end", class: "axis-label" }, formatInteger.format(maxCount * ratio));
+      appendSvg(scaleCurveSvg, "text", { x: left - 13, y: y + 4, "text-anchor": "end", class: "axis-label" }, compactCount(value));
     });
     [0, 50, 100].forEach((value) => {
       const y = fractionY(value);
       appendSvg(scaleCurveSvg, "line", { x1: left, y1: y, x2: right, y2: y, class: "grid-line" });
       appendSvg(scaleCurveSvg, "text", { x: left - 13, y: y + 4, "text-anchor": "end", class: "axis-label" }, value + "%");
     });
+    [2, 2.5, 3].forEach((value) => {
+      const y = exponentY(value);
+      appendSvg(scaleCurveSvg, "line", { x1: left, y1: y, x2: right, y2: y, class: value === 3 ? "dimension-reference" : "grid-line" });
+      appendSvg(scaleCurveSvg, "text", { x: left - 13, y: y + 4, "text-anchor": "end", class: "axis-label" }, value.toFixed(1));
+    });
+    appendSvg(scaleCurveSvg, "text", { x: right - 7, y: exponentTop - 7, "text-anchor": "end", class: "reference-label" }, "Wang–Zahl limiting value for every genuine Kakeya set");
 
-    const selectedX = xFor(selectedLevel);
-    appendSvg(scaleCurveSvg, "line", { x1: selectedX, y1: topStart - 5, x2: selectedX, y2: bottomEnd + 5, class: "selected-guide" });
-    const countPath = counts.map((value, index) => (index === 0 ? "M " : "L ") + xFor(index) + " " + countY(value)).join(" ");
-    const fractionPath = fractions.map((value, index) => (index === 0 ? "M " : "L ") + xFor(index) + " " + fractionY(value)).join(" ");
+    const selectedX = xFor(cubeLevels[selectedLevel].denominator);
+    appendSvg(scaleCurveSvg, "line", { x1: selectedX, y1: countTop - 5, x2: selectedX, y2: exponentBottom + 5, class: "selected-guide" });
+    const countPath = counts.map((value, index) => (index === 0 ? "M " : "L ") + xFor(records[index].denominator) + " " + countY(value)).join(" ");
+    const fractionPath = fractions.map((value, index) => (index === 0 ? "M " : "L ") + xFor(records[index].denominator) + " " + fractionY(value)).join(" ");
+    const exponentPath = exponents.slice(1).map((value, offset) => (offset === 0 ? "M " : "L ") + xFor(records[offset + 1].denominator) + " " + exponentY(value)).join(" ");
     appendSvg(scaleCurveSvg, "path", { d: countPath, class: "count-path" });
     appendSvg(scaleCurveSvg, "path", { d: fractionPath, class: "fraction-path" });
+    appendSvg(scaleCurveSvg, "path", { d: exponentPath, class: "exponent-path" });
 
     counts.forEach((value, index) => {
-      const x = xFor(index);
+      const record = records[index];
+      const x = xFor(record.denominator);
       const y = countY(value);
-      appendSvg(scaleCurveSvg, "circle", { cx: x, cy: y, r: 4.5, class: "count-point" });
-      appendSvg(scaleCurveSvg, "text", { x: x, y: y - 10, "text-anchor": "middle", class: "point-label" }, formatInteger.format(value));
-      if (index === selectedLevel) appendSvg(scaleCurveSvg, "circle", { cx: x, cy: y, r: 9, class: "selected-halo" });
+      appendSvg(scaleCurveSvg, "circle", { cx: x, cy: y, r: record.interactive ? 4 : 5, class: "count-point" });
+      if (shouldLabelCurvePoint(record)) {
+        appendSvg(scaleCurveSvg, "text", { x: x, y: y - 10, "text-anchor": "middle", class: "point-label" }, compactCount(value));
+      }
+      if (record.interactive && record.levelIndex === selectedLevel) appendSvg(scaleCurveSvg, "circle", { cx: x, cy: y, r: 9, class: "selected-halo" });
     });
     fractions.forEach((value, index) => {
-      const x = xFor(index);
+      const record = records[index];
+      const x = xFor(record.denominator);
       const y = fractionY(value);
       appendSvg(scaleCurveSvg, "circle", { cx: x, cy: y, r: 4.5, class: "fraction-point" });
-      appendSvg(scaleCurveSvg, "text", { x: x, y: y - 10, "text-anchor": "middle", class: "point-label" }, value.toFixed(1) + "%");
-      appendSvg(scaleCurveSvg, "text", { x: x, y: 388, "text-anchor": "middle", class: "axis-label" }, cubeLevels[index].denominator);
-      if (index === selectedLevel) appendSvg(scaleCurveSvg, "circle", { cx: x, cy: y, r: 9, class: "selected-halo" });
+      if (shouldLabelCurvePoint(record)) {
+        appendSvg(scaleCurveSvg, "text", { x: x, y: y - 9, "text-anchor": "middle", class: "point-label" }, value.toFixed(record.denominator >= 100 ? 2 : 1) + "%");
+      }
+      if (record.interactive && record.levelIndex === selectedLevel) appendSvg(scaleCurveSvg, "circle", { cx: x, cy: y, r: 9, class: "selected-halo" });
     });
-    appendSvg(scaleCurveSvg, "text", { x: 522, y: 417, "text-anchor": "middle", class: "axis-label" }, "ruler denominator m  (δ = 1/m)");
-  }
-
-  async function buildCompleteScaleCurve() {
-    for (let index = 0; index < cubeLevels.length; index += 1) {
-      await ensureVoxelCover(index);
-      renderScaleCurves();
-    }
+    exponents.forEach((value, index) => {
+      if (value === null) return;
+      const record = records[index];
+      const x = xFor(record.denominator);
+      const y = exponentY(value);
+      appendSvg(scaleCurveSvg, "circle", { cx: x, cy: y, r: record.interactive ? 4 : 5, class: "exponent-point" });
+      if (shouldLabelCurvePoint(record)) {
+        appendSvg(scaleCurveSvg, "text", { x: x, y: y - 10, "text-anchor": "middle", class: "point-label exponent-label" }, value.toFixed(3));
+      }
+      if (record.interactive && record.levelIndex === selectedLevel) appendSvg(scaleCurveSvg, "circle", { cx: x, cy: y, r: 9, class: "selected-halo" });
+    });
+    [2, 10, 100, 1000].forEach((denominator) => {
+      appendSvg(scaleCurveSvg, "text", { x: xFor(denominator), y: 584, "text-anchor": "middle", class: "axis-label" }, denominator);
+    });
+    appendSvg(scaleCurveSvg, "text", { x: 522, y: 598, "text-anchor": "middle", class: "axis-label" }, "ruler denominator m  (δ = 1/m) · logarithmic spacing");
   }
 
   function drawProjectedCube(ctx, cell, cover, width, height, alpha) {
@@ -609,40 +676,44 @@
   function updateCountReadout() {
     const level = cubeLevels[selectedLevel];
     const cover = voxelCache.get(selectedLevel);
+    const exact = interactiveCurveCounts[selectedLevel];
     cubeSide.textContent = level.label;
     directionCount.textContent = formatInteger.format(level.directions);
-    availableCount.textContent = formatInteger.format(level.grid ** 3);
+    availableCount.textContent = formatInteger.format(exact.available);
     updateRulerDirectionVisual(level);
-    if (!cover) {
-      occupiedCount.textContent = "…";
-      occupiedFraction.textContent = "counting…";
-      volumeProxy.textContent = "…";
-      volumeEquation.textContent = "Counting N(δ)…";
-      snapshotSentence.textContent = "Counting the cubes touched by " + level.label + "-scale tubes…";
-      countCaption.textContent = "The cube cover is being counted from the displayed tube geometry.";
-      return;
-    }
-    const count = cover.cells.size;
-    const total = level.grid ** 3;
+    const count = exact.count;
+    const total = exact.available;
     const fraction = count / total;
     const proxy = count * level.delta ** 3;
     occupiedCount.textContent = formatInteger.format(count);
     occupiedFraction.textContent = formatDecimal.format(fraction * 100) + "%";
-    volumeProxy.textContent = formatDecimal.format(proxy);
+    volumeProxy.textContent = formatThreeDecimals.format(proxy);
     const percent = fraction * 100;
     const filledTiles = Math.round(percent);
     fractionTiles.forEach((tile, index) => tile.classList.toggle("filled", index < filledTiles));
     fractionTouched.textContent = formatInteger.format(count) + " touched";
     fractionAvailable.textContent = formatInteger.format(total) + " available";
     fractionPercent.textContent = formatDecimal.format(percent) + "%";
-    volumeEquation.textContent = "N(δ) × δ³ ≈ " + formatDecimal.format(proxy);
+    volumeEquation.textContent = formatInteger.format(count) + " × (" + level.label + ")³ = " + formatThreeDecimals.format(proxy);
     snapshotIcon.style.setProperty("--fraction-fill", clamp(percent, 0, 100) + "%");
     snapshotSentence.textContent = formatInteger.format(count) + " of " + formatInteger.format(total) + " frame cubes touch the " + level.label + "-scale tube sample.";
-    countCaption.textContent = selectedView === "tubes"
-      ? "The tubes are visible; the counted cube cover is hidden."
-      : selectedView === "cubes"
-        ? "Only the outer faces of the counted cubes are shown; hidden cubes are included in the counter."
-        : "Every translucent cube intersects a displayed tube; overlaps still count once.";
+    countCaption.textContent = !cover && selectedView !== "tubes"
+      ? "The exact offline count is ready; preparing this ruler’s cube surfaces for the 3D view."
+      : selectedView === "tubes"
+        ? "The tubes are visible; the counted cube cover is hidden."
+        : selectedView === "cubes"
+          ? "Only the outer faces of the counted cubes are shown; hidden cubes are included in the counter."
+          : "Every translucent cube intersects a displayed tube; overlaps still count once.";
+
+    const baselineCount = interactiveCurveCounts[0].count;
+    if (level.denominator === 2) {
+      finiteExponentEquation.innerHTML = "N(1/2) = " + formatInteger.format(count) + " · baseline";
+      finiteExponentExplanation.textContent = "Choose a finer ruler to compare its cube-count growth with this starting count.";
+    } else {
+      const exponent = finiteExponent(level.denominator, count, baselineCount);
+      finiteExponentEquation.innerHTML = "log(" + formatInteger.format(count) + "/" + formatInteger.format(baselineCount) + ") ÷ log(" + level.denominator + "/2) = " + exponent.toFixed(3);
+      finiteExponentExplanation.textContent = "From " + formatInteger.format(baselineCount) + " cubes at 1/2 to " + formatInteger.format(count) + " cubes at " + level.label + ". This finite slope is measured from the displayed geometry; dimension is the limiting exponent over arbitrarily fine rulers.";
+    }
   }
 
   function setSelectedLevel(levelIndex) {
@@ -680,35 +751,6 @@
     updateViewButtonStates();
     updateCountReadout();
   });
-
-  // ---------------------------------------------------------------------------
-  // Dimension rate model: N_n = 10^(3n) / n.
-  // The 1/n loss tends to zero, but is too slow to change the exponent.
-  // ---------------------------------------------------------------------------
-  const decadeSlider = document.querySelector("#decadeSlider");
-  const decadeOutput = document.querySelector("#decadeOutput");
-  const modelFraction = document.querySelector("#modelFraction");
-  const modelMultiplier = document.querySelector("#modelMultiplier");
-  const modelDimension = document.querySelector("#modelDimension");
-  const modelExplanation = document.querySelector("#modelExplanation");
-
-  function updateRateModel() {
-    const n = Number(decadeSlider.value);
-    const fraction = 1 / n;
-    const multiplier = 1000 * n / (n + 1);
-    const dimension = 3 - Math.log10(n) / n;
-    decadeOutput.value = "n = " + formatInteger.format(n);
-    modelFraction.textContent = n <= 100
-      ? "1/" + n + " = " + formatDecimal.format(fraction * 100) + "%"
-      : "1/" + n + " ≈ " + formatDecimal.format(fraction * 100) + "%";
-    modelMultiplier.textContent = "×" + formatInteger.format(multiplier);
-    modelDimension.textContent = dimension.toFixed(3);
-    modelExplanation.textContent = n === 1
-      ? "At the first ruler size the model uses the whole frame. Later it discards a slowly increasing share, while its count power stays close to 3."
-      : "After " + formatInteger.format(n) + " tenfold refinements, only " + (n <= 100 ? "1/" + n : "about 1/" + n) + " of the available cubes remain. The next count multiplier is still about " + formatInteger.format(multiplier) + "—and it tends to 1,000.";
-  }
-
-  decadeSlider.addEventListener("input", updateRateModel);
 
   // ---------------------------------------------------------------------------
   // Shared interaction and animation loop.
@@ -767,8 +809,6 @@
   updatePackingLabels();
   setSelectedLevel(4);
   updateViewButtonStates();
-  updateRateModel();
   updateMotionButton();
-  window.setTimeout(buildCompleteScaleCurve, 700);
   window.requestAnimationFrame(render);
 })();
