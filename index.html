@@ -31,7 +31,7 @@
       <section class="hero" id="top" aria-labelledby="hero-title">
         <div class="hero-copy">
           <p class="eyebrow"><span>2026 Fields Medal</span> · an interactive guide for non-specialists</p>
-          <h1 id="hero-title"><em>The Kakeya set problem:</em> every direction, almost no volume.</h1>
+          <h1 id="hero-title"><em>The 3D Kakeya problem:</em> volume can vanish; dimension cannot.</h1>
 
           <aside class="hero-news" aria-label="Why the Kakeya problem is in the news">
             <p class="card-kicker">Why this problem matters now</p>
@@ -49,9 +49,9 @@
           </aside>
 
           <p class="hero-lede">
-            At a finite scale, an ideal line segment looks like a thin tube. The puzzle is whether
-            tubes pointing throughout space can overlap so efficiently that their volume becomes
-            tiny—and whether that can make the underlying set less than three-dimensional.
+            At a finite scale, an ideal line segment looks like a thin tube. Packing explains how
+            tubes pointing throughout space can occupy very little volume. The breakthrough answers
+            the harder question left after that: can the limiting set lose dimension? In ℝ³, it cannot.
           </p>
 
           <div class="hero-actions">
@@ -59,11 +59,19 @@
             <a class="text-link" href="#theorem">Jump to the theorem <span aria-hidden="true">↓</span></a>
           </div>
 
-          <div class="hero-facts" aria-label="Key facts">
-            <div><strong>1</strong><span>unit segment in every direction</span></div>
-            <div><strong>δ</strong><span>tube thickness at the current scale</span></div>
-            <div><strong>3</strong><span>dimensions ultimately forced</span></div>
-          </div>
+          <aside class="hero-clarifications" aria-label="Two common misunderstandings about the result">
+            <p class="card-kicker">Two common misunderstandings</p>
+            <div>
+              <article>
+                <span>01</span>
+                <p><strong>This is the three-dimensional problem—not the planar one.</strong> The two-dimensional Kakeya conjecture was proved by Roy Davies in 1971. Wang and Zahl resolved the long-open case in ℝ³.</p>
+              </article>
+              <article>
+                <span>02</span>
+                <p><strong>The breakthrough is about dimension—not the discovery of small volume.</strong> Measure-zero Kakeya sets were already known. The new theorem says that every Kakeya set in ℝ³ nevertheless has full dimension 3.</p>
+              </article>
+            </div>
+          </aside>
         </div>
 
       </section>
@@ -353,17 +361,19 @@
           <div class="theorem-kicker"><span>Wang–Zahl · three dimensions</span><b>Resolved</b></div>
           <div class="theorem-layout">
             <div>
-              <p class="step-label">What the theorem says</p>
-              <h2 id="theorem-title">Every Kakeya set in ℝ<sup>3</sup> has dimension 3.</h2>
+              <p class="step-label">The academic statement</p>
+              <h2 id="theorem-title">Every Kakeya set in ℝ<sup>3</sup> has Minkowski and Hausdorff dimension 3.</h2>
             </div>
             <div class="theorem-copy">
+              <p class="theorem-takeaway">Volume can shrink to zero. Dimension cannot.</p>
               <p>
-                Clever overlap may make the occupied fraction—and even ordinary volume—zero. But it
-                cannot produce a lasting power-law saving in the number of tiny cubes required.
+                The theorem does not say that a Kakeya set must have positive ordinary volume. It may
+                have volume zero. It says that no arrangement can make its small-scale covering count
+                grow with an exponent below 3.
               </p>
               <p>
-                In plain language: <strong>the set can be extremely sparse, but it cannot behave like a
-                surface, a curve, or anything with fewer than three dimensions.</strong>
+                In plain language: <strong>overlap can shrink the amount of space occupied, but it cannot
+                make the set behave like a surface, a curve, or anything genuinely lower-dimensional.</strong>
               </p>
             </div>
           </div>

@@ -203,19 +203,15 @@ h3 { margin: 0; font-size: 1.18rem; letter-spacing: -0.025em; line-height: 1.2; 
 
 .text-link { color: var(--teal-dark); font-size: 0.86rem; font-weight: 740; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 
-.hero-facts {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  max-width: 1000px;
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid var(--line);
-}
-
-.hero-facts div { display: flex; flex-direction: column; }
-.hero-facts strong { color: var(--teal-dark); font-family: Georgia, serif; font-size: 1.85rem; font-weight: 500; line-height: 1; }
-.hero-facts span { max-width: 135px; margin-top: 7px; color: var(--ink-soft); font-size: 0.7rem; line-height: 1.35; }
+.hero-clarifications { max-width: 1050px; margin-top: 38px; padding-top: 22px; border-top: 1px solid var(--line); }
+.hero-clarifications > div { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.hero-clarifications article { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; padding: 19px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,0.52); }
+.hero-clarifications article:first-child { border-color: rgba(231,103,79,0.25); }
+.hero-clarifications article:last-child { border-color: rgba(8,127,115,0.26); background: rgba(204,233,225,0.28); }
+.hero-clarifications article > span { display: grid; place-items: center; width: 31px; height: 31px; border-radius: 50%; color: white; background: var(--coral); font-size: 0.66rem; font-weight: 800; }
+.hero-clarifications article:last-child > span { background: var(--teal-dark); }
+.hero-clarifications article p { margin: 0; color: var(--ink-soft); font-size: 0.79rem; }
+.hero-clarifications article strong { color: var(--ink); }
 
 .section { padding: 112px 0; }
 .section + .section { border-top: 1px solid var(--line); }
@@ -485,6 +481,7 @@ tbody td:last-child { color: var(--teal-dark); font-weight: 780; }
 .theorem-card h2 { color: white; }
 .theorem-copy p { margin: 0 0 18px; color: rgba(255,255,255,0.75); }
 .theorem-copy strong { color: white; }
+.theorem-copy .theorem-takeaway { margin-bottom: 19px; color: white; font-family: Georgia,serif; font-size: clamp(1.45rem,2.2vw,2rem); font-weight: 500; letter-spacing: -0.03em; line-height: 1.08; }
 .theorem-results { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 42px; }
 .theorem-results > div { padding: 19px; border: 1px solid rgba(255,255,255,0.14); border-radius: 16px; background: rgba(255,255,255,0.06); }
 .theorem-results span, .theorem-results small { display: block; color: rgba(255,255,255,0.65); font-size: 0.68rem; }
@@ -517,7 +514,7 @@ footer a { flex: 0 0 auto; color: var(--teal-dark); font-weight: 730; text-under
   h2 { font-size: clamp(2.25rem,11vw,3.4rem); }
   .section { padding: 82px 0; }
   .hero-actions { align-items: flex-start; flex-direction: column; gap: 16px; }
-  .hero-facts { gap: 8px; }
+  .hero-clarifications > div { grid-template-columns: 1fr; }
   .hero-news-links { flex-direction: column; }
   .tube-stage, .count-stage { min-height: 500px; border-radius: 22px; }
   .tube-controls, .count-controls { grid-template-columns: 1fr; }
@@ -544,7 +541,7 @@ footer a { flex: 0 0 auto; color: var(--teal-dark); font-weight: 730; text-under
   .brand { font-size: 0.78rem; }
   .motion-toggle { padding: 7px 10px; font-size: 0.68rem; }
   .hero { padding-top: 46px; }
-  .hero-facts span { font-size: 0.63rem; }
+  .hero-clarifications article { padding: 16px; }
   .tube-stage, .count-stage { min-height: 440px; }
   .visual-topline { top: 16px; right: 16px; left: 16px; }
   .visual-hint { display: none; }
