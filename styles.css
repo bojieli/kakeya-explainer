@@ -109,18 +109,19 @@ strong { font-weight: 760; }
 .chapter-nav a { text-decoration: none; }
 .chapter-nav a:hover, .chapter-nav a:focus-visible { color: var(--teal-dark); }
 
-.motion-toggle {
+.header-github-link {
   justify-self: end;
   padding: 8px 13px;
   border: 1px solid var(--line);
   border-radius: 999px;
   color: var(--ink-soft);
   background: rgba(255, 255, 255, 0.52);
-  cursor: pointer;
   font-size: 0.75rem;
+  font-weight: 720;
+  text-decoration: none;
 }
 
-.motion-toggle:hover, .motion-toggle:focus-visible { border-color: var(--teal); color: var(--teal-dark); }
+.header-github-link:hover, .header-github-link:focus-visible { border-color: var(--teal); color: var(--teal-dark); }
 
 .hero, .section, footer {
   width: min(var(--content), calc(100% - 40px));
@@ -436,17 +437,6 @@ input[type="range"] { width: 100%; margin: 18px 0 0; accent-color: var(--teal); 
 .curve-data-strip .card-exponent { margin-top: 4px; color: var(--blue); font-weight: 720; }
 .curve-caveat { margin: 14px 0 0; color: var(--ink-soft); font-size: 0.71rem; }
 
-.live-count-panel { margin-top: 28px; padding: 27px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: rgba(255,255,255,0.52); }
-.live-count-heading { display: flex; justify-content: space-between; gap: 30px; align-items: end; }
-.live-count-heading h3 { max-width: 720px; text-align: right; }
-.live-count-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 22px; }
-.live-count-grid > div { min-width: 0; padding: 15px 13px; border-radius: 14px; background: rgba(255,255,255,0.7); }
-.live-count-grid span, .live-count-grid small { display: block; color: var(--ink-soft); font-size: 0.65rem; line-height: 1.3; }
-.live-count-grid strong { display: block; margin: 7px 0 3px; overflow-wrap: anywhere; color: var(--teal-dark); font-family: Georgia,serif; font-size: clamp(1.1rem, 1.8vw, 1.55rem); font-weight: 500; }
-.occupied-stat { background: var(--teal-dark) !important; }
-.occupied-stat span, .occupied-stat strong { color: white; }
-.boundary-note { margin: 17px 0 0; color: var(--ink-soft); font-size: 0.74rem; }
-
 .math-inline { white-space: nowrap; font-family: Georgia,serif; color: var(--ink); }
 
 .measurement-bridge { display: grid; grid-template-columns: minmax(0,0.82fr) minmax(0,1.18fr); gap: 24px; margin-top: 28px; }
@@ -503,7 +493,6 @@ footer a { flex: 0 0 auto; color: var(--teal-dark); font-weight: 730; text-under
   .tube-lab, .count-lab { grid-template-columns: 1fr; }
   .tube-controls, .count-controls { grid-template-columns: repeat(2,1fr); }
   .sample-readout, .count-rule-card { grid-column: 1 / -1; }
-  .live-count-grid { grid-template-columns: repeat(3,1fr); }
   .measurement-bridge { grid-template-columns: 1fr; }
   .theorem-layout { grid-template-columns: 1fr; }
 }
@@ -528,9 +517,6 @@ footer a { flex: 0 0 auto; color: var(--teal-dark); font-weight: 730; text-under
   .scale-curve-panel figcaption { grid-template-columns: 1fr; gap: 14px; }
   .curve-legend { flex-wrap: wrap; justify-content: flex-start; }
   .curve-data-strip { grid-template-columns: repeat(22,90px); }
-  .live-count-heading { display: block; }
-  .live-count-heading h3 { margin-top: 10px; text-align: left; }
-  .live-count-grid { grid-template-columns: repeat(2,1fr); }
   .fraction-card { grid-template-columns: 1fr; }
   .fraction-gauge-wrap { width: min(100%,330px); margin-inline: auto; }
   .measurement-lane { grid-template-columns: 100px 1fr; padding: 15px; }
@@ -541,7 +527,7 @@ footer a { flex: 0 0 auto; color: var(--teal-dark); font-weight: 730; text-under
 @media (max-width: 480px) {
   .site-header { min-height: 60px; padding: 0 14px; }
   .brand { font-size: 0.78rem; }
-  .motion-toggle { padding: 7px 10px; font-size: 0.68rem; }
+  .header-github-link { padding: 7px 10px; font-size: 0.68rem; }
   .hero { padding-top: 46px; }
   .hero-clarifications article { padding: 16px; }
   .tube-stage, .count-stage { min-height: 440px; }
@@ -553,9 +539,6 @@ footer a { flex: 0 0 auto; color: var(--teal-dark); font-weight: 730; text-under
   .resolution-buttons button { padding-inline: 3px; }
   .direction-density-wrap { grid-template-columns: 82px 1fr; }
   .direction-dot-field { width: 82px; }
-  .live-count-panel { padding: 20px; }
-  .live-count-grid { grid-template-columns: 1fr 1fr; }
-  .live-count-grid > div { padding: 12px 10px; }
   .fraction-card, .volume-dimension-card { padding: 20px; }
   .measurement-lane { grid-template-columns: 1fr; text-align: center; }
   .measurement-icon { margin-bottom: 5px; }

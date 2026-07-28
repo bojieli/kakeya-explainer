@@ -24,7 +24,9 @@
         <a href="#count">Count the cubes</a>
         <a href="#theorem">The result</a>
       </nav>
-      <button class="motion-toggle" id="motionToggle" type="button" aria-pressed="false">Pause motion</button>
+      <a class="header-github-link" href="https://github.com/bojieli/kakeya-explainer" aria-label="View this project on GitHub">
+        GitHub <span aria-hidden="true">↗</span>
+      </a>
     </header>
 
     <main id="main">
@@ -277,25 +279,6 @@
             has limiting dimension 3 over arbitrarily fine rulers.
           </p>
         </figure>
-
-        <div class="live-count-panel" aria-live="polite">
-          <div class="live-count-heading">
-            <p class="card-kicker">This displayed finite-scale snapshot</p>
-            <h3 id="snapshotSentence">Counting the cubes touched by the medium tube sample…</h3>
-          </div>
-          <div class="live-count-grid">
-            <div><span>cube side</span><strong id="cubeSide">1/10</strong></div>
-            <div><span>direction samples</span><strong id="directionCount">100</strong><small>on the order of δ<sup>−2</sup></small></div>
-            <div class="occupied-stat"><span>cubes in this cover</span><strong id="occupiedCount">—</strong></div>
-            <div><span>all cubes in frame</span><strong id="availableCount">—</strong></div>
-            <div><span>occupied fraction</span><strong id="occupiedFraction">—</strong></div>
-            <div><span>volume proxy</span><strong id="volumeProxy">—</strong><small>N(δ) × δ<sup>3</sup></small></div>
-          </div>
-          <p class="boundary-note">
-            The screen uses a fixed enclosing box and an intersection test for the displayed tubes.
-            Moving the grid changes boundary cubes slightly, but only by fixed factors that do not change a dimension exponent.
-          </p>
-        </div>
 
         <div class="measurement-bridge">
           <article class="fraction-card">

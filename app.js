@@ -287,7 +287,6 @@
   packSlider.addEventListener("input", () => { stopPacking(); updatePackingLabels(); });
   playPacking.addEventListener("click", () => {
     if (packingPlaying) { stopPacking(); return; }
-    if (state.paused) { state.paused = false; updateMotionButton(); }
     if (Number(packSlider.value) >= 100) packSlider.value = "0";
     packingFrom = Number(packSlider.value);
     packingStarted = performance.now();
@@ -322,13 +321,6 @@
   // ---------------------------------------------------------------------------
   const countCanvas = document.querySelector("#countCanvas");
   const countCaption = document.querySelector("#countCaption");
-  const cubeSide = document.querySelector("#cubeSide");
-  const directionCount = document.querySelector("#directionCount");
-  const occupiedCount = document.querySelector("#occupiedCount");
-  const availableCount = document.querySelector("#availableCount");
-  const occupiedFraction = document.querySelector("#occupiedFraction");
-  const volumeProxy = document.querySelector("#volumeProxy");
-  const snapshotSentence = document.querySelector("#snapshotSentence");
   const resolutionButtons = document.querySelector("#resolutionButtons");
   const viewButtons = document.querySelector("#viewButtons");
   const miniRuler = document.querySelector("#miniRuler");
@@ -677,17 +669,11 @@
     const level = cubeLevels[selectedLevel];
     const cover = voxelCache.get(selectedLevel);
     const exact = interactiveCurveCounts[selectedLevel];
-    cubeSide.textContent = level.label;
-    directionCount.textContent = formatInteger.format(level.directions);
-    availableCount.textContent = formatInteger.format(exact.available);
     updateRulerDirectionVisual(level);
     const count = exact.count;
     const total = exact.available;
     const fraction = count / total;
     const proxy = count * level.delta ** 3;
-    occupiedCount.textContent = formatInteger.format(count);
-    occupiedFraction.textContent = formatDecimal.format(fraction * 100) + "%";
-    volumeProxy.textContent = formatThreeDecimals.format(proxy);
     const percent = fraction * 100;
     const filledTiles = Math.round(percent);
     fractionTiles.forEach((tile, index) => tile.classList.toggle("filled", index < filledTiles));
@@ -696,7 +682,6 @@
     fractionPercent.textContent = formatDecimal.format(percent) + "%";
     volumeEquation.textContent = formatInteger.format(count) + " × (" + level.label + ")³ = " + formatThreeDecimals.format(proxy);
     snapshotIcon.style.setProperty("--fraction-fill", clamp(percent, 0, 100) + "%");
-    snapshotSentence.textContent = formatInteger.format(count) + " of " + formatInteger.format(total) + " frame cubes touch the " + level.label + "-scale tube sample.";
     countCaption.textContent = !cover && selectedView !== "tubes"
       ? "The exact offline count is ready; preparing this ruler’s cube surfaces for the 3D view."
       : selectedView === "tubes"
@@ -755,20 +740,8 @@
   // ---------------------------------------------------------------------------
   // Shared interaction and animation loop.
   // ---------------------------------------------------------------------------
-  const motionToggle = document.querySelector("#motionToggle");
   let dragging = null;
   let lastPointer = { x: 0, y: 0 };
-
-  function updateMotionButton() {
-    motionToggle.textContent = state.paused ? "Resume motion" : "Pause motion";
-    motionToggle.setAttribute("aria-pressed", String(state.paused));
-  }
-
-  motionToggle.addEventListener("click", () => {
-    state.paused = !state.paused;
-    if (state.paused) stopPacking();
-    updateMotionButton();
-  });
 
   [packCanvas, countCanvas].forEach((canvas) => {
     canvas.addEventListener("pointerdown", (event) => {
@@ -795,7 +768,7 @@
     state.lastTime = now;
     state.time = now;
     if (!state.paused && !dragging) state.camera.yaw += dt * 0.000055;
-    if (packingPlaying && !state.paused) {
+    if (packingPlaying) {
       const elapsed = clamp((now - packingStarted) / packingDuration, 0, 1);
       packSlider.value = String(lerp(packingFrom, 100, ease(elapsed)).toFixed(1));
       updatePackingLabels();
@@ -809,6 +782,5 @@
   updatePackingLabels();
   setSelectedLevel(4);
   updateViewButtonStates();
-  updateMotionButton();
   window.requestAnimationFrame(render);
 })();
